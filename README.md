@@ -29,7 +29,7 @@ private void InitializeDialogueDataBase()
     }
 }
 ```
-#### QuestManager - начать диалог
+#### DialogueManager - начать диалог
 1. Проверяем есть ли диалог с ключом key в базе данных
 2. Если его нет - выводим соответсвующее сообщение
 3. Иначе обращаемся к компоненту `Dialogue_` у объекта с диалогом и начинаем диалог 
@@ -47,34 +47,58 @@ public void StartDialogueByKey(string key)
 }
 ```
 #### Dialogue_ - начать диалог
-1. Активируем окно диалога.
-Если предложение еще не печатается:
-    * Печатаем предложение
-    * Воспроизводим звук
-    * Увеличиваем счетчик, чтобы напечатать следующее предложение
-Если все предложения напечатаны, то заканчиваем диалог
+* Активируем окно диалога
+* Если напечатали уже все предложения:
+    * Заканчиваем диалог
+* Помечаем isDialogueActive как `True`
+* Печатаем 1-ое предлоежение
 ```C#
 public void StartDialogue()
 {
-    dialogueBox.SetActive(true);
-    if (i + 1 <= sentences.Length)
+    if (i + 1 > sentences.Length)
     {
-        if (!isTypingSentence)
-        {
-            StartCoroutine(TypeSentence(sentences[i]));
-            isTypingSentence = true;
-            playSound(sounds[0], volume: 0.5f, p1: 1f, p2: 1f);
-            i++;
-        }
+        EndDialogue();
+        return;
+    }
+    dialogueBox.SetActive(true);
+    isDialogueActive = true;
+    if (!isTypingSentence)
+        StartCoroutine(TypeSentence(sentences[i]));
+    isTypingSentence = true;
+}
+```
+#### Dialogue_ - продолжить диалог
+1. Update
+   * Если есть активный диалог и не печатается текущее предложение
+       * Продолжаем диалог
+2. ContinueDialogue
+   * Если написали все предложения в диалоге - заканчиваем его
+   * Иначе печатаем следующее
+```
+private void Update()
+{
+    if (isDialogueActive && !isTypingSentence)
+    {
+        if (Input.GetKeyDown(KeyCode.E))
+            ContinueDialogue();
+    }
+}
+
+public void ContinueDialogue()
+{
+    if (i + 1 < sentences.Length)
+    {
+        i++;
+        isTypingSentence = true;
+        StartCoroutine(TypeSentence(sentences[i]));
     }
     else
     {
         EndDialogue();
-        i = 0;
     }
 }
 ```
-#### QuestManaget - закончить диалог
+#### QuestManager - закончить диалог
 Если у нас воспроизводится диалог: 
   1. Заканчиваем его обращаясь к компоненту `Dialogue_` объекта, с которым сейчас разговариваем
   2. Говорим, что `activeDialogue = null` 
