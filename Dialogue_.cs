@@ -1,86 +1,87 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.UI;
 using TMPro;
-using UnityEngine.Video;
 
-public class Dialogue_ : SoundManager
+public class Dialogue_ : MonoBehaviour
 {
     [Header("System")]
-    public GameObject dialogueBox;
-    public TextMeshProUGUI dialogueText;
-    public string name_speaker;
-    public string[] sentences;
-    [Header("Boolean")]
-    public bool isAddNewItem = false;
-    public bool isNeighbourFromDay3 = false;
+    public GameObject dialogueBox; // Окно диалогов в Canvas
+    public TextMeshProUGUI dialogueText; // Текст предложения в диалоговом окне 
+    public string name_speaker; // Имя собеседника
+    public string[] sentences; // Предложения, которые будут проигрываться в диалоге
 
-    int i = 0;
-    bool isTypingSentence = false;
-    bool IsNewItemGiven = false;
-    public GameObject neighbour;
+    private int i; // Индекс предложения в диалоге 
+    private bool isTypingSentence = false; // Печатается ли предложение в данный момент
+    private bool isDialogueActive = false; // Есть ли активный диалог в данный момент
 
     private void Start()
     {
-        i = 0;
+        i = 0; // Ставим индекс предложения равным 0-лю, чтобы печатать с 1-го предложения
         isTypingSentence = false;
     }
-    public void StartDialogue()
+    // Функция для начала диалога
+    public void StartDialogue() 
     {
-        dialogueBox.SetActive(true);
-        playerCamRotate.Instance.enabled = false;
-        playerControl.Instance.enabled = false;
-        if (i + 1 <= sentences.Length)
+        if (i + 1 > sentences.Length) 
         {
-            if (!isTypingSentence)
-            {
-                StartCoroutine(TypeSentence(sentences[i]));
-                isTypingSentence = true;
-                playSound(sounds[0], volume: 0.5f, p1: 1f, p2: 1f);
-                i++;
-            }
-        }
-        else
-        {
-            if (isNeighbourFromDay3)
-            {
-                neighbour.GetComponent<NPC>().isWalkingContinued = true;
-            }
             EndDialogue();
-            i = 0;
+            return;
+        }
+
+        dialogueBox.SetActive(true); // Активируем окно диалогов в Canvas 
+        isDialogueActive = true; 
+        if (!isTypingSentence) 
+            StartCoroutine(TypeSentence(sentences[i])); 
+        isTypingSentence = true;
+    }
+
+    private void Update()
+    {
+        if (isDialogueActive && !isTypingSentence)
+        {
+            // Условие написания нового предложения 
+            if (Input.GetKeyDown(KeyCode.E))
+                ContinueDialogue();
         }
     }
+    // Функция для продолжения диалога
+    public void ContinueDialogue()
+    {
+        // Если не выходим за пределы массива предложений в диалоге 
+        if (i + 1 < sentences.Length)
+        {
+            i++;
+            isTypingSentence = true;
+            StartCoroutine(TypeSentence(sentences[i]));
+        }
+        // Если вышли за пределы - заканчиваем диалог
+        else
+        {
+            EndDialogue();
+        }
+    }
+    private int rnd;
+    // Коорутина для последовательного написания предложения
     IEnumerator TypeSentence(string sentence)
     {
+        rnd = Random.Range(0, DialogueManager.Instance.sounds.Count);
         if (name_speaker != "")
             dialogueText.text = name_speaker + ": ";
         else
             dialogueText.text = "";
+        // Проходимся по предложению побуквенно
         foreach (char letter in sentence.ToCharArray())
         {
+            // Добавляем 1 букву и ждем 0.07 секунд
             dialogueText.text += letter;
-            yield return new WaitForSeconds(0.01f);
+            yield return new WaitForSeconds(0.07f);
+            DialogueManager.Instance.playSound(DialogueManager.Instance.sounds[rnd], volume: 0.1f, p1: 1f, p2: 1f);
         }
         isTypingSentence = false;
     }
     public void EndDialogue()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        playerCamRotate.Instance.transform.gameObject.GetComponent<playerCamRotate>().enabled = true;
-        playerControl.Instance.enabled = true;
-        if (gameObject.tag == "NPC" && gameObject.GetComponent<NPC>().isWalking)
-            Invoke("continueWalk", 1f); 
         dialogueBox.SetActive(false);
-        if (isAddNewItem && !IsNewItemGiven)
-        {
-            Main.instance.panels[2].gameObject.SetActive(true);
-            IsNewItemGiven = true;
-        }
-    }
-    void continueWalk()
-    {
-        gameObject.GetComponent<NPC>().isWalkingContinued = true;
+        isDialogueActive = false;
     }
 }
