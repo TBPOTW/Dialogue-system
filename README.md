@@ -74,7 +74,7 @@ public void StartDialogue()
 2. ContinueDialogue
    * Если написали все предложения в диалоге - заканчиваем его
    * Иначе печатаем следующее
-```
+```C#
 private void Update()
 {
     if (isDialogueActive && !isTypingSentence)
