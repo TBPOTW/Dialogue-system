@@ -12,7 +12,6 @@ public class Dialogue_ : MonoBehaviour
 
     private int i; // Индекс предложения в диалоге 
     private bool isTypingSentence = false; // Печатается ли предложение в данный момент
-    private bool isDialogueActive = false; // Есть ли активный диалог в данный момент
 
     private void Start()
     {
@@ -29,7 +28,6 @@ public class Dialogue_ : MonoBehaviour
         }
 
         dialogueBox.SetActive(true); // Активируем окно диалогов в Canvas 
-        isDialogueActive = true; 
         if (!isTypingSentence) 
             StartCoroutine(TypeSentence(sentences[i])); 
         isTypingSentence = true;
@@ -37,7 +35,7 @@ public class Dialogue_ : MonoBehaviour
 
     private void Update()
     {
-        if (isDialogueActive && !isTypingSentence)
+        if (!isTypingSentence)
         {
             // Условие написания нового предложения 
             if (Input.GetKeyDown(KeyCode.E))
@@ -64,7 +62,6 @@ public class Dialogue_ : MonoBehaviour
     // Коорутина для последовательного написания предложения
     IEnumerator TypeSentence(string sentence)
     {
-        rnd = Random.Range(0, DialogueManager.Instance.sounds.Count);
         if (name_speaker != "")
             dialogueText.text = name_speaker + ": ";
         else
@@ -75,13 +72,12 @@ public class Dialogue_ : MonoBehaviour
             // Добавляем 1 букву и ждем 0.07 секунд
             dialogueText.text += letter;
             yield return new WaitForSeconds(0.07f);
-            DialogueManager.Instance.playSound(DialogueManager.Instance.sounds[rnd], volume: 0.1f, p1: 1f, p2: 1f);
         }
         isTypingSentence = false;
     }
     public void EndDialogue()
     {
         dialogueBox.SetActive(false);
-        isDialogueActive = false;
     }
 }
+
