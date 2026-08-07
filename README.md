@@ -98,7 +98,7 @@ public void ContinueDialogue()
     }
 }
 ```
-#### QuestManager - закончить диалог
+#### DialogueManager - закончить диалог
 Если у нас воспроизводится диалог: 
   1. Заканчиваем его обращаясь к компоненту `Dialogue_` объекта, с которым сейчас разговариваем
   2. Говорим, что `activeDialogue = null` 
